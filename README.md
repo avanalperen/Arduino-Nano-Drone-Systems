@@ -2,8 +2,8 @@ This project is made for learning Arduino Nano and flight control card systems f
 
 References : <br /> <br />
 
-  The owner of the Teensy-Arduino drone project is : https://github.com/CarbonAeronautics <br /> <br />
+  Owner of the Teensy-Arduino drone project is : https://github.com/CarbonAeronautics <br /> <br />
   
-  The youtube playlist : https://www.youtube.com/playlist?list=PLeuMA6tJBPKsAfRfFuGrEljpBow5hPVD4
+  Youtube playlist : https://www.youtube.com/playlist?list=PLeuMA6tJBPKsAfRfFuGrEljpBow5hPVD4
   
 
