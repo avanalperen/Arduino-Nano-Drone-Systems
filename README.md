@@ -1,4 +1,4 @@
-This project is made for learning Arduino Nano and flight system codes for drones. <br /> <br />
+This project is made for learning Arduino Nano and flight control card systems for drones. <br /> <br />
 
 References : <br /> <br />
 
