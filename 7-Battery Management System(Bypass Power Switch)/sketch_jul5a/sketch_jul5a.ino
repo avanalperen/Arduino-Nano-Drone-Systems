@@ -8,6 +8,8 @@ void batteryVoltage(void)
 
 void setup() {
   
+  pinMode(7,OUTPUT);
+
   if(voltage > 7.5)
   {
     digitalWrite(7,HIGH);

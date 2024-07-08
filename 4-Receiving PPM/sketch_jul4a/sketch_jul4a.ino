@@ -1,4 +1,4 @@
-//Use the PulsePosition library
+//The library to read the PPM(Pulse Position Modulation) signals
 #include <PulsePosition.h>
 PulsePositionInput receiverInput(RISING);
 

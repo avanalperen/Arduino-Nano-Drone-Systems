@@ -1,4 +1,5 @@
 
+//The library used for I2C communication
 #include <Wire.h>
 
 //Declare Roll,Pitch and Yaw variables

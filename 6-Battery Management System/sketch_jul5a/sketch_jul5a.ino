@@ -10,9 +10,11 @@ void batteryVoltage(void)
   current = (float)analogRead(A1)*0.089;
 }
 void setup() {
-  
-  //Green led pin
+
+  //Red led pin
+  pinMode(7,OUTPUT);
   digitalWrite(7,HIGH);
+  
   batteryVoltage();
   if(voltage > 8.3)
   {
