@@ -1,15 +1,59 @@
+
 //The library used for I2C communication
 #include <Wire.h>
 
+//Define the Gyroscope and Accelerometer variables
 //Declare Roll,Pitch and Yaw variables
 float rateRoll, ratePitch, rateYaw;
+
+//Declare Calibration of Roll,Pitch and Yaw variables
+float rateCalibrationRoll, rateCalibrationPitch, rateCalibrationYaw;
+int rateCalibrationNumber;
 
 //Define the accelerometer variables
 float accX, accY, accZ;
 float angleRoll, anglePitch;
 
 //Define the parameter containing the length of each control loop
-float loopTimer;
+uint32_t loopTimer;
+
+//Define the predicted angles and the uncertainties
+//0 is the prediction of the initial angle and 2 * 2 is the uncertainty of the initial angle
+float kalmanAngleRoll = 0;
+float kalmanUncertaintyAngleRoll = 2 * 2;
+
+float kalmanAnglePitch = 0;
+float kalmanUncertaintyAnglePitch = 2 * 2;
+
+//Initialize the output of the filter(Angle prediction, Uncertainty of the prediction)
+float kalman1DOutput [] = {0,0};
+
+//Function that calculates predicted angle and uncertainty using the Kalman equations
+
+// 1 - Predict the current state of the system
+// 2 - Calculate the uncertainty of the prediction
+// 3 - Calculate the Kalman gain from the uncertainties on the predictions and measurements
+// 4 - Update the predicted state of the system with the measurement of the state through the Kalman gain
+// 5 - Update the uncertainty of the predicted state
+void kalman1D(float kalmanState, float kalmanUncertainty, float kalmanInput, float kalmanMeasurement)
+{
+  kalmanState = kalmanState + 0.004 * kalmanInput;
+  kalmanUncertainty = kalmanUncertainty + 0.004 * 0.004 * 4 * 4;
+
+  float kalmanGain = kalmanUncertainty * 1 / (1 * kalmanUncertainty + 3 * 3);
+
+  kalmanState = kalmanState + kalmanGain * (kalmanMeasurement - kalmanState);
+
+  kalmanUncertainty = (1-kalmanGain) * kalmanUncertainty;
+
+  //Kalman Filter Output
+  kalman1DOutput[0] = kalmanState;
+  kalman1DOutput[1] = kalmanUncertainty;
+
+  // kalmanInput contains the rotation rate measurement
+  // kalmanMeasurement contains the accelerometer angle measurement
+  // kalmanState contains the angle calculated with the Kalman filter
+}
 
 //Start I2C communication with the gyro
 //Because it was first made for Gyroscope Calibration System and then to Accelerometer configuration some hexidecimal register map values are changed 
@@ -138,45 +182,64 @@ void setup() {
 
   Wire.endTransmission();
 
+  //Perform the calibration measurements
+  for(rateCalibrationNumber = 0 ; rateCalibrationNumber < 2000 ; rateCalibrationNumber++)
+  {
+    gyroSignals();
+    rateCalibrationRoll += rateRoll;
+    rateCalibrationPitch += ratePitch;
+    rateCalibrationYaw += rateYaw;
+    delay(1);
+  }
+
+  //Calculate the calibration values
+  rateCalibrationRoll /= 2000;
+  rateCalibrationPitch /= 2000;
+  rateCalibrationYaw /= 2000;
+  loopTimer = micros();
+
 }
 
 void loop() {
   
-
-  //Print the Accelerometer Values
-  /*
+  //Call the predefined function to read the gyro measurements
   gyroSignals();
 
+  //Correct the measured values, Calculate the rotation rates
+  rateRoll -= rateCalibrationRoll;
+  ratePitch -= rateCalibrationPitch;
+  rateYaw -= rateCalibrationYaw;
 
-  Serial.print("Acceleration X [g] = ");
-  Serial.print(accX);
+  //Start the iteration for the Kalman filter with the roll and pitch angles
+  kalman1D(kalmanAngleRoll, kalmanUncertaintyAngleRoll, rateRoll, angleRoll);
 
-  Serial.print("Acceleration Y [g] = ");
-  Serial.print(accY);
+  kalmanAngleRoll = kalman1DOutput[0];
 
-  Serial.print("Acceleration Z [g] = ");
-  Serial.println(accZ);
+  kalmanUncertaintyAngleRoll = kalman1DOutput[1];
 
-  delay(50);
-  */
-  
-  //The angle measurements that is calculated from accelerations are to sensitive , also because of the vibration these values can be too wrong sometimes so it is nearly impossible to use these values. But, there is a posibility to use if its calculated by Kalman filter
-  //Print the Angle measurements
-  gyroSignals();
+  kalman1D(kalmanAnglePitch, kalmanUncertaintyAnglePitch, ratePitch, anglePitch); 
 
-  
-  Serial.print("Roll angle [°] = ");
-  Serial.print(angleRoll);
+  kalmanAnglePitch = kalman1DOutput[0];
 
-  Sedrial.print("Pitch angle [°] = ");
-  Serial.println(anglePitch);
-  
+  kalmanUncertaintyAnglePitch = kalman1DOutput[1];
+
+  //Print the predicted angle values
+  Serial.print("Roll Angle [°] : ");
+  Serial.print(kalmanAngleRoll);
+
+  Serial.print("Pitch Angle [°] : ");
+  Serial.println(kalmanAnglePitch);
+
   //For Serial Plotter test screen
   /*
-  Serial.print(angleRoll);
+  Serial.print(kalmanAngleRoll);
   Serial.print(",");
-  Serial.println(anglePitch);
+  Serial.println(kalmanAnglePitch);
   */
 
-  delay(50);
+  while(micros() - loopTimer < 4000)
+  {
+    loopTimer = micros();
+  }
+
 }
