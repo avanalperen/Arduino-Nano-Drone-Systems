@@ -1,3 +1,4 @@
+
 //The library used for I2C communication
 #include <Wire.h>
 
@@ -7,6 +8,10 @@ float rateRoll, ratePitch, rateYaw;
 //Define the accelerometer variables
 float accX, accY, accZ;
 float angleRoll, anglePitch;
+
+//Define the acceleration and velocity variables
+float accZInertial;
+float velocityVertical;
 
 //Define the parameter containing the length of each control loop
 float loopTimer;
@@ -57,7 +62,6 @@ void gyroSignals(void)
   //Read the accelerometer measurements around the Z axis
   int16_t accZLSB = Wire.read()<<8 | Wire.read();
 
-  //Gyro Measurement Part
   //Set the sensitivity scale factor of the sensor
   Wire.beginTransmission(0x68);
 
@@ -100,11 +104,12 @@ void gyroSignals(void)
   accZ = (float)accZLSB/4096 - 0.02;
 
   //Calculate the absolute angles , because arduino gives the atan result in radians , it need to be converted to degrees so multiplied by (3.142 / 180) will convert it to degree.
-  angleRoll = atan(accY / sqrt(accX*accX + accZ*accZ)) * 1 / (3.142 / 180);
-  anglePitch = -atan(accX/sqrt(accY*accY + accZ*accZ)) * 1 / (3.142 / 180);
+  angleRoll = atan(accY / sqrt(accX*accX + accZ*accZ)) * (180 / 3.142);
+  anglePitch = -atan(accX/sqrt(accY*accY + accZ*accZ)) * (180 / 3.142);
 }
 
-void setup() {
+void setup() 
+{
   
   //Communication with the gyroscope and calibration
   //57600: Good balance of speed and stability for Arduino Nano for faster data transmission
@@ -130,43 +135,32 @@ void setup() {
 
 }
 
-void loop() {
+void loop() 
+{
   
-
-  //Print the Accelerometer Values
-  /*
   gyroSignals();
 
+  //Calculate the acceleration in the inertial Z axis
+  accZInertial = -sin(anglePitch * (3.142 / 180)) * accX + cos(anglePitch * (3.142 / 180)) * sin(angleRoll * (3.142 / 180)) * accY + cos(anglePitch * (3.142 / 180)) * cos(angleRoll * (3.142 / 180)) * accZ;
 
-  Serial.print("Acceleration X [g] = ");
-  Serial.print(accX);
+  //Unit of Acceleration is g so convert the acceleration to cm/s2
+  accZInertial = (accZInertial - 1) * 9.81 * 100;
 
-  Serial.print("Acceleration Y [g] = ");
-  Serial.print(accY);
+  //Calculate and print the vertical velocity
+  velocityVertical = velocityVertical + accZInertial * 0.004;
 
-  Serial.print("Acceleration Z [g] = ");
-  Serial.println(accZ);
-
-  delay(50);
-  */
-  
-  //The angle measurements that is calculated from accelerations are to sensitive , also because of the vibration these values can be too wrong sometimes so it is nearly impossible to use these values. But, there is a posibility to use if its calculated by Kalman filter
-  //Print the Angle measurements
-  gyroSignals();
-
-  
-  Serial.print("Roll angle [°] = ");
-  Serial.print(angleRoll);
-
-  Sedrial.print("Pitch angle [°] = ");
-  Serial.println(anglePitch);
-  
-  //For Serial Plotter test screen
+  //Instead of using this
   /*
-  Serial.print(angleRoll);
-  Serial.print(",");
-  Serial.println(anglePitch);
+  Serial.print("Vertical velocity [cm/s] : ");
+  Serial.println(velocityVertical);
   */
 
-  delay(50);
+  //Use this To read serial plotter
+  Serial.print("Vertical_velocity:");
+  Serial.println(velocityVertical);
+
+  while(micros() - loopTimer < 4000)
+  {
+    loopTimer = micros();
+  }
 }

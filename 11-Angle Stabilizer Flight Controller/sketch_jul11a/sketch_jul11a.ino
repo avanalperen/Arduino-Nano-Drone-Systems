@@ -172,15 +172,6 @@ void gyroSignals(void)
 
   //Gyro Measurement Part
   //MPU6050 Unique Address
-  Wire.beginTransmission(0x68);
-
-  //Low pass filter register map
-  Wire.write(0x1A);
-
-  //Cut off frequency of 10 hertz of a low pass filter 
-  Wire.write(0x05);
-  Wire.endTransmission();
-
   //Set the sensitivity scale factor of the sensor
   Wire.beginTransmission(0x68);
 
