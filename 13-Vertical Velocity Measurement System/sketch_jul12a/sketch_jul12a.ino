@@ -133,6 +133,66 @@ void setup()
 
   Wire.endTransmission();
 
+  //Optimize the barometer for indoor navigation
+  Wire.beginTransmission(0x76);
+  Wire.write(0xF4);
+
+  //The corresponding full binary setting for measurement F4 is equal to a hexadecimal value 57
+  Wire.write(0x57);
+  Wire.endTransmission();
+
+  //Setup the configuration register
+  Wire.beginTransmission(0x76);
+  Wire.write(0xF5);
+
+  //The corresponding full binary setting for register F5 is equal to a hexadecimal value 57
+  Wire.write(0x14);
+  Wire.endTransmission();
+
+  //Import the calibration parameters
+  uint8_t data[24], i = 0;
+
+  Wire.beginTransmission(0x76);
+
+  //The register address of first trimming parameter
+  Wire.write(0x88);
+  Wire.endTransmission();
+
+  //Request 24 byte so information can be pulled from 24 registers
+  Wire.requestFrom(0x76,24);
+  
+  while(Wire.available())
+  {
+    data[i] = Wire.read();
+    i++;
+  }
+
+  digT1 = (data[1] << 8) | data[0];
+  digT2 = (data[3] << 8) | data[2];
+  digT3 = (data[5] << 8) | data[4];
+
+  digP1 = (data[7] << 8) | data[6];
+  digP2 = (data[9] << 8) | data[8];
+  digP3 = (data[11] << 8) | data[10];
+  digP4 = (data[13] << 8) | data[12];
+  digP5 = (data[15] << 8) | data[14];
+  digP6 = (data[17] << 8) | data[16];
+  digP7 = (data[19] << 8) | data[18];
+  digP8 = (data[21] << 8) | data[20];
+  digP9 = (data[23] << 8) | data[22];
+
+  delay(250);
+
+  //Calculate the altitude reference level
+  for(rateCalibrationNumber = 0;rateCalibrationNumber < 2000;rateCalibrationNumber++)
+  {
+    barometerSignals();
+    altitudeBarometerStartUp += altitudeBarometer;
+    delay(1);
+  }
+
+  altitudeBarometerStartUp /= 2000;
+
 }
 
 void loop() 
@@ -163,4 +223,5 @@ void loop()
   {
     loopTimer = micros();
   }
+  
 }

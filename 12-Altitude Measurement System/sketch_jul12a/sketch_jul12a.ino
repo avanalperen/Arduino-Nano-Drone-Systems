@@ -130,29 +130,28 @@ void setup() {
   }
 
   digT1 = (data[1] << 8) | data[0];
-digT2 = (data[3] << 8) | data[2];
-digT3 = (data[5] << 8) | data[4];
+  digT2 = (data[3] << 8) | data[2];
+  digT3 = (data[5] << 8) | data[4];
 
-digP1 = (data[7] << 8) | data[6];
-digP2 = (data[9] << 8) | data[8];
-digP3 = (data[11] << 8) | data[10];
-digP4 = (data[13] << 8) | data[12];
-digP5 = (data[15] << 8) | data[14];
-digP6 = (data[17] << 8) | data[16];
-digP7 = (data[19] << 8) | data[18];
-digP8 = (data[21] << 8) | data[20];
-digP9 = (data[23] << 8) | data[22];
+  digP1 = (data[7] << 8) | data[6];
+  digP2 = (data[9] << 8) | data[8];
+  digP3 = (data[11] << 8) | data[10];
+  digP4 = (data[13] << 8) | data[12];
+  digP5 = (data[15] << 8) | data[14];
+  digP6 = (data[17] << 8) | data[16];
+  digP7 = (data[19] << 8) | data[18];
+  digP8 = (data[21] << 8) | data[20];
+  digP9 = (data[23] << 8) | data[22];
 
-//Calculate the altitude reference level
-for(rateCalibrationNumber = 0;rateCalibrationNumber < 2000;rateCalibrationNumber++)
-{
-  barometerSignals();
-  altitudeBarometerStartUp += altitudeBarometer;
-  delay(1);
-}
+  //Calculate the altitude reference level
+  for(rateCalibrationNumber = 0;rateCalibrationNumber < 2000;rateCalibrationNumber++)
+  {
+    barometerSignals();
+    altitudeBarometerStartUp += altitudeBarometer;
+    delay(1);
+  }
 
-altitudeBarometerStartUp /= 2000;
-
+  altitudeBarometerStartUp /= 2000;
 }
 
 void loop() {
